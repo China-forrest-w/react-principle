@@ -1,6 +1,6 @@
 // import React from 'react';
-import React from './react';
-import ReactDOM from './react-dom';
+import React from 'react';
+import ReactDOM from 'react-dom';
 
 class Counter extends React.Component {
   constructor(props) {
@@ -10,7 +10,20 @@ class Counter extends React.Component {
     }
   }
   handlerClick = () => {
-    this.setState({number: this.state.number + 1})
+    this.setState((lastState) => ({ number: lastState.number + 1 }), () => {
+      console.log("callback1", this.state.number);
+    });
+    console.log("this.state.number", this.state.number);
+    this.setState((lastState) => ({ number: lastState.number + 1 }));
+    console.log('this.state.number', this.state.number);
+    Promise.resolve().then(() => {
+      console.log('this.state,number', this.state.number);
+      this.setState((lastState) => ({ number: lastState.number + 1 }));
+      console.log('this.state,number', this.state.number);
+      this.setState((lastState) => ({ number: lastState.number + 1 }));
+      console.log('this.state,number', this.state.number);
+    });
+    // this.setState({ number: this.state.number + 1 })
   }
   render() {
     return (
@@ -23,5 +36,5 @@ class Counter extends React.Component {
 }
 
 ReactDOM.render((
-  <Counter name="计数器"/>
+  <Counter name="计数器" />
 ), document.getElementById('root'));
