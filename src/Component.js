@@ -1,3 +1,11 @@
+/*
+ * @Author: your name
+ * @Date: 2021-03-16 15:13:37
+ * @LastEditTime: 2021-03-25 16:39:10
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: /react-principle/src/Component.js
+ */
 import { createDOM } from './react-dom';
 
 // 更新队列
@@ -5,8 +13,8 @@ export let updateQueue = {
   isBatchingUpdate: false, //当前是否处于批量更新模式,默认不是，即直接更新
   updaters: new Set(),
   batchUpdate() {//批量更新其实就是循环updaters进行执行
-    for(let updater of this.updaters) {
-      updater.updateClassComponent();
+    for (let updater of this.updaters) {
+      updater.updateComponent();
     }
     this.isBatchingUpdate = false;
   }
@@ -23,24 +31,28 @@ class Updater {
     if (typeof callback === 'function') {
       this.callbacks.push(callback);//状态更新后的回调
     }
+    this.emitUpdate();
+  }
+  /* 组件不管是属性还是状态变化都需要进行更新，因此我们提取成一个方法 */
+  emitUpdate(newProps) {
     /* 判断是否批量更新模式 */
     if (updateQueue.isBatchingUpdate) {
       updateQueue.updaters.add(this);
     } else {
-      this.updateClassComponent();
+      this.updateComponent();
     }
   }
-  updateClassComponent() {
+
+  updateComponent() {
     let { classInstance, pendingState, callbacks } = this;
     /* 有等待更新的对象 */
     if (pendingState.length) {
-      classInstance.state = this.getState();//计算新状态
-      classInstance.forceUpdate();
       callbacks.forEach(callback => callback());
       callbacks.length = 0;
+      shouldUpdate(classInstance, this.getState());
     }
   }
-  /* 计算最新的状态 */ 
+  /* 计算最新的状态 */
   getState() {
     let { classInstance, pendingState } = this;
     let { state } = classInstance;
@@ -54,6 +66,20 @@ class Updater {
     return state;
   }
 }
+/**
+ * @description: 
+ * @param {*} classInstance 组件实例
+ * @param {*} pendingState  新的状态
+ * @return {*}
+ */
+function shouldUpdate(classInstance, nextState) {
+  /* 不管组件的属性是否要更新，其实组件的state已经改变了 */
+  classInstance.state = nextState;
+  if(classInstance.shouldComponentUpdate && !classInstance.shouldComponentUpdate(classInstance.props, classInstance.state)) {
+    return;
+  }
+  classInstance.forceUpdate();
+}
 
 class Component {
   static isReactComponent = true;
@@ -66,9 +92,14 @@ class Component {
     this.updater.addState(partialState, callback);
   }
   forceUpdate() {
-    console.dir(this.render)
+    if(this.componentWillUpdate) {
+      this.componentWillUpdate();
+    }
     const newVdom = this.render();
     updateClassComponent(this, newVdom);
+    if(this.componentDidUpdate) {
+      this.componentDidUpdate();
+    }
   }
 }
 

@@ -10,6 +10,7 @@ import { addEvent } from './event';
 function render(vdom, container) {
   const dom = createDOM(vdom);
   container.appendChild(dom);
+  dom.componentDidMount && dom.componentDidMount();
 }
 /* 把虚拟DOM变成真实DOM */
 export function createDOM(vdom) {
@@ -51,10 +52,16 @@ function mountClassComponent(vdom) {
   let { type, props } = vdom;
   // 创建类的实例
   let classInstance = new type(props);
+  if(classInstance.componentWillMount) {
+    classInstance.componentWillMount();
+  }
   // 调用实例的render方法返回要渲染的虚拟DOM对象
   let renderVdom = classInstance.render();
   // 根据虚拟DOM对象创建真实DOM对象
   let dom = createDOM(renderVdom);
+  if(classInstance.componentDidMount) {
+    dom.componentDidMount = classInstance.componentDidMount.bind(classInstance);
+  }
   // 为以后类组件的更新，把真实DOM挂载到了类的实例上
   classInstance.dom = dom;
   return dom;
