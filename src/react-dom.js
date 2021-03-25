@@ -4,6 +4,9 @@
 把虚拟DOM的儿子们也变成真实DOM挂载到自己的dom上  dom.appendChlid
  把自己挂载到容器上
 */
+
+import { addEvent } from './event';
+
 function render(vdom, container) {
   const dom = createDOM(vdom);
   container.appendChild(dom);
@@ -81,7 +84,8 @@ function updateProps(dom, newProps) {
       }
     } else if (key.startsWith('on')) {
       // 给真实DOM添加属性
-      dom[key.toLocaleLowerCase()] = newProps[key];
+      // dom[key.toLocaleLowerCase()] = newProps[key];
+      addEvent(dom, key.toLocaleLowerCase(), newProps[key]);
     } else {
       dom[key] = newProps[key];
     }
