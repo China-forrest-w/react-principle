@@ -11,7 +11,9 @@ function render(vdom, container) {
   const dom = createDOM(vdom);
   container.appendChild(dom);
   dom.componentDidMount && dom.componentDidMount();
+  console.log("render")
 }
+
 /* 把虚拟DOM变成真实DOM */
 export function createDOM(vdom) {
   if (typeof vdom === 'string' || typeof vdom === 'number') {
@@ -29,8 +31,10 @@ export function createDOM(vdom) {
   } else { //原生组件
     dom = document.createElement(type);
   }
+  console.log('createDOM');
   // 使用虚拟DOM的属性更新刚创建出来的真实DOM的属性
-  updateProps(dom, props);
+  updateProps(dom, {}, props);
+
   // 单独在这里处理children
   // 如果只有一个儿子，并且这个儿子是一个虚拟DOM元素
   if (typeof props.children === 'string' || typeof props.children === 'number') {
@@ -39,11 +43,13 @@ export function createDOM(vdom) {
     // 把儿子变成真实DOM插到自己身上
     render(props.children, dom);
   } else if (Array.isArray(props.children)) {
+    console.log('Array.isArray(props.children)', Array.isArray(props.children));
     reconcileChildren(props.children, dom);
   } else {
     document.textContent = props.children ? props.children.toString() : '';
   }
   // 把真实DOM作为一个dom属性放到虚拟DOM，为以后的更新做准备
+  vdom.dom = dom;
   return dom;
 }
 
@@ -52,18 +58,19 @@ function mountClassComponent(vdom) {
   let { type, props } = vdom;
   // 创建类的实例
   let classInstance = new type(props);
-  if(classInstance.componentWillMount) {
+  vdom.classInstance = classInstance;
+  if (classInstance.componentWillMount) {
     classInstance.componentWillMount();
   }
-  // 调用实例的render方法返回要渲染的虚拟DOM对象
-  let renderVdom = classInstance.render();
+  /* 调用实例的render方法返回要渲染的虚拟DOM对象 */
+  let oldRenderVdom = classInstance.render();
+  /* 把将要渲染的虚拟dom添加到类的实例上 */
+  classInstance.oldRenderVdom = oldRenderVdom;
   // 根据虚拟DOM对象创建真实DOM对象
-  let dom = createDOM(renderVdom);
-  if(classInstance.componentDidMount) {
+  let dom = createDOM(oldRenderVdom);
+  if (classInstance.componentDidMount) {
     dom.componentDidMount = classInstance.componentDidMount.bind(classInstance);
   }
-  // 为以后类组件的更新，把真实DOM挂载到了类的实例上
-  classInstance.dom = dom;
   return dom;
 }
 
@@ -71,6 +78,7 @@ function mountClassComponent(vdom) {
 function mountFunctionComponent(vdom) {//类型为自定义函数组件的虚拟DOM
   let { type: FunctionComponent, props } = vdom;
   let renderVdom = FunctionComponent(props);
+  vdom.oldRenderVdom = renderVdom;
   return createDOM(renderVdom);
 }
 
@@ -81,7 +89,7 @@ function reconcileChildren(childrenVdom, parentDOM) {
   }
 }
 
-function updateProps(dom, newProps) {
+function updateProps(dom, oldProps, newProps) {
   for (let key in newProps) {
     if (key === 'children') continue;
     if (key === 'style') {
@@ -91,12 +99,91 @@ function updateProps(dom, newProps) {
       }
     } else if (key.startsWith('on')) {
       // 给真实DOM添加属性
-      // dom[key.toLocaleLowerCase()] = newProps[key];
       addEvent(dom, key.toLocaleLowerCase(), newProps[key]);
     } else {
       dom[key] = newProps[key];
     }
   }
+}
+
+/* 对当前组件进行dom-diff */
+/**
+ * @description: 
+ * @param {*} parentDOM  当前组件挂载真实DOM节点
+ * @param {*} oldVdom    上一次老的虚拟DOM
+ * @param {*} newVdom    上一次新的虚拟DOM
+ * @return {*}
+ */
+export function compareTwoVdom(parentDOM, oldVdom, newVdom, nextDOM) {
+  /* 老的虚拟DOM和新的虚拟DOM都是null */
+  console.log('compareTwoVdom')
+  if (!oldVdom && !newVdom) {
+  } else if (oldVdom && !newVdom) {
+    const currentDOM = findDOM(oldVdom);
+    if (currentDOM) parentDOM.removeChild(currentDOM);
+    if (oldVdom?.classInstance?.componentWillUnmount) {
+      oldVdom.classInstance.componentWillUnmount();
+    }
+    /* 老的虚拟dom为null,新的虚拟dom有值：新建dom节点然后插入 */
+  } else if (!oldVdom && newVdom) {
+    const newDOM = createDOM(newVdom);
+    if (nextDOM) {
+      parentDOM.insertBefore(newDOM, nextDOM);
+    } else {
+      parentDOM.appendChild(newDOM);
+    }
+  } else if (oldVdom && newVdom && (oldVdom.type !== newVdom.type)) {
+    /* 老的有，新的也有，但是类型不同 */
+    const oldDOM = findDOM(oldVdom); //老的真实DOM
+    const newDOM = createDOM(newVdom);//新的真实DOM
+    parentDOM.replaceChild(newDOM, oldDOM);
+    if (oldVdom?.classInstance?.componentWillUnmount) {
+      oldVdom.classInstance.componentWillUnmount();
+    }
+    /* 新的有老的也有并且类型相同：就可以复用老的dom节点，然后进行深度的dom-diff */
+    /* 既要更新自己的属性，又要比较儿子们 */
+  } else {
+    console.log('相同的结构updateElement');
+    updateElement(oldVdom, newVdom);
+    return newVdom;
+  }
+}
+
+/**
+ * @description: 
+ * @param {*} oldVdom
+ * @param {*} newVdom
+ * @return {*}
+ */
+function updateElement(oldVdom, newVdom) {
+  // 先更新属性
+  if (typeof oldVdom.type === 'string') {
+    let currentDOM = newVdom.dom = oldVdom.dom;//复用老的div的真实DOM
+    /* 先更新自己的属性 */
+    updateProps(currentDOM, oldVdom.props, newVdom.props);
+    /* 然后更新儿子们 */
+    // updateChildren(currentDOM, oldVdom.props.children, newVdom.props.children);
+  }
+}
+
+/**
+ * @description: 查找虚拟DOM对应的真实DOM
+ * @param {*} vdom
+ * @return {*}
+ */
+function findDOM(vdom) {
+  let { type } = vdom;
+  let dom;
+  if (typeof type === 'function') {
+    if (type.isReactComponent) {
+      dom = findDOM(vdom.classInstance.oldRenderVdom);
+    } else {
+      dom = findDOM(vdom.oldRenderVdom);
+    }
+  } else {
+    dom = vdom.dom
+  }
+  return dom;
 }
 const ReactDOM = { render };
 export default ReactDOM;

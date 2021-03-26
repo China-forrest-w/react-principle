@@ -1,3 +1,11 @@
+/*
+ * @Author: your name
+ * @Date: 2021-03-25 13:54:16
+ * @LastEditTime: 2021-03-26 20:16:52
+ * @LastEditors: your name
+ * @Description: In User Settings Edit
+ * @FilePath: /react-principle/src/event.js
+ */
 import { updateQueue } from './Component';
 
 /* 
@@ -40,6 +48,7 @@ function dispatchEvent(event) {
   for (let key in syntheticEvent) {
     syntheticEvent[key] = null;
   }
+  updateQueue.isBatchingUpdate = false;
   updateQueue.batchUpdate();
 }
 

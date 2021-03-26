@@ -1,12 +1,12 @@
 /*
  * @Author: your name
  * @Date: 2021-03-16 15:13:37
- * @LastEditTime: 2021-03-25 16:39:10
+ * @LastEditTime: 2021-03-26 19:34:14
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /react-principle/src/Component.js
  */
-import { createDOM } from './react-dom';
+import { createDOM, compareTwoVdom } from './react-dom';
 
 // 更新队列
 export let updateQueue = {
@@ -75,7 +75,7 @@ class Updater {
 function shouldUpdate(classInstance, nextState) {
   /* 不管组件的属性是否要更新，其实组件的state已经改变了 */
   classInstance.state = nextState;
-  if(classInstance.shouldComponentUpdate && !classInstance.shouldComponentUpdate(classInstance.props, classInstance.state)) {
+  if (classInstance.shouldComponentUpdate && !classInstance.shouldComponentUpdate(classInstance.props, classInstance.state)) {
     return;
   }
   classInstance.forceUpdate();
@@ -92,25 +92,28 @@ class Component {
     this.updater.addState(partialState, callback);
   }
   forceUpdate() {
-    if(this.componentWillUpdate) {
+    if (this.componentWillUpdate) {
       this.componentWillUpdate();
     }
     const newVdom = this.render();
-    updateClassComponent(this, newVdom);
-    if(this.componentDidUpdate) {
+    console.log('this', this);
+    console.log('newVdom', newVdom);
+    // updateClassComponent(this, newVdom);
+    compareTwoVdom(this.oldRenderVdom.dom.parentNode, this.oldRenderVdom, newVdom);
+    if (this.componentDidUpdate) {
       this.componentDidUpdate();
     }
   }
 }
 
 // 更新类组件实例上挂载的dom
-function updateClassComponent(classInstance, newVdom) {
-  /* 取出这个类组件中上次渲染出来的真实DOM */
-  let oldDOM = classInstance.dom;
-  /* 把一个新的虚拟DOM变成真实DOM */
-  let newDOM = createDOM(newVdom);
-  oldDOM.parentNode.replaceChild(newDOM, oldDOM)
-  classInstance.dom = newDOM;
-}
+// function updateClassComponent(classInstance, newVdom) {
+//   /* 取出这个类组件中上次渲染出来的真实DOM */
+//   let oldDOM = classInstance.dom;
+//   /* 把一个新的虚拟DOM变成真实DOM */
+//   let newDOM = createDOM(newVdom);
+//   oldDOM.parentNode.replaceChild(newDOM, oldDOM)
+//   classInstance.dom = newDOM;
+// }
 
 export default Component;
