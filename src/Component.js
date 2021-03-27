@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2021-03-16 15:13:37
- * @LastEditTime: 2021-03-26 19:34:14
+ * @LastEditTime: 2021-03-27 15:44:39
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /react-principle/src/Component.js
@@ -34,7 +34,8 @@ class Updater {
     this.emitUpdate();
   }
   /* 组件不管是属性还是状态变化都需要进行更新，因此我们提取成一个方法 */
-  emitUpdate(newProps) {
+  emitUpdate(nextProps) {
+    this.nextProps = nextProps;
     /* 判断是否批量更新模式 */
     if (updateQueue.isBatchingUpdate) {
       updateQueue.updaters.add(this);
@@ -44,12 +45,12 @@ class Updater {
   }
 
   updateComponent() {
-    let { classInstance, pendingState, callbacks } = this;
+    let { classInstance, pendingState, callbacks, nextProps } = this;
     /* 有等待更新的对象 */
-    if (pendingState.length) {
+    if (nextProps || pendingState.length) {
       callbacks.forEach(callback => callback());
       callbacks.length = 0;
-      shouldUpdate(classInstance, this.getState());
+      shouldUpdate(classInstance, nextProps, this.getState());
     }
   }
   /* 计算最新的状态 */
@@ -72,7 +73,11 @@ class Updater {
  * @param {*} pendingState  新的状态
  * @return {*}
  */
-function shouldUpdate(classInstance, nextState) {
+function shouldUpdate(classInstance, nextProps, nextState) {
+  /* 不管组件是否更新， 组件的props已经改变了 */
+  if(nextProps) {
+    classInstance.props = nextProps;
+  }
   /* 不管组件的属性是否要更新，其实组件的state已经改变了 */
   classInstance.state = nextState;
   if (classInstance.shouldComponentUpdate && !classInstance.shouldComponentUpdate(classInstance.props, classInstance.state)) {

@@ -89,7 +89,7 @@ class ChildCounter extends React.Component {
   render() {
     console.log('ChildCounter 2.render');
     return (
-      <div>asdf
+      <div>
         {this.props.count}
       </div>
     )

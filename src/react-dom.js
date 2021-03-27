@@ -6,6 +6,7 @@
 */
 
 import { addEvent } from './event';
+import { REACT_TEXT } from './constants';
 
 function render(vdom, container) {
   const dom = createDOM(vdom);
@@ -16,13 +17,11 @@ function render(vdom, container) {
 
 /* 把虚拟DOM变成真实DOM */
 export function createDOM(vdom) {
-  if (typeof vdom === 'string' || typeof vdom === 'number') {
-    return document.createTextNode(vdom);
-  }
-  // 否则就是一个虚拟DOM对象，也就是React元素；
   let { type, props } = vdom;
   let dom;
-  if (typeof type === 'function') {
+  if (type === REACT_TEXT) {
+    dom = document.createTextNode(props.context)
+  } else if (typeof type === 'function') {
     if (type.isReactComponent) {
       return mountClassComponent(vdom);
     } else {
@@ -37,17 +36,16 @@ export function createDOM(vdom) {
 
   // 单独在这里处理children
   // 如果只有一个儿子，并且这个儿子是一个虚拟DOM元素
-  if (typeof props.children === 'string' || typeof props.children === 'number') {
-    dom.textContent = props.children;
-  } else if (typeof props.children === 'object' && props.children.type) {
+
+  if (typeof props?.children === 'object' && props?.children?.type) {
     // 把儿子变成真实DOM插到自己身上
     render(props.children, dom);
-  } else if (Array.isArray(props.children)) {
-    console.log('Array.isArray(props.children)', Array.isArray(props.children));
+  } else if (Array.isArray(props?.children)) {
     reconcileChildren(props.children, dom);
-  } else {
-    document.textContent = props.children ? props.children.toString() : '';
   }
+  //  else {
+  //   document.textContent = props?.children ? props?.children.toString() : '';
+  // }
   // 把真实DOM作为一个dom属性放到虚拟DOM，为以后的更新做准备
   vdom.dom = dom;
   return dom;
@@ -65,7 +63,7 @@ function mountClassComponent(vdom) {
   /* 调用实例的render方法返回要渲染的虚拟DOM对象 */
   let oldRenderVdom = classInstance.render();
   /* 把将要渲染的虚拟dom添加到类的实例上 */
-  classInstance.oldRenderVdom = oldRenderVdom;
+  classInstance.oldRenderVdom = vdom.oldRenderVdom = oldRenderVdom;
   // 根据虚拟DOM对象创建真实DOM对象
   let dom = createDOM(oldRenderVdom);
   if (classInstance.componentDidMount) {
@@ -84,7 +82,7 @@ function mountFunctionComponent(vdom) {//类型为自定义函数组件的虚拟
 
 function reconcileChildren(childrenVdom, parentDOM) {
   for (let i = 0; i < childrenVdom.length; i++) {
-    let childVdom = childrenVdom[i];
+    const childVdom = childrenVdom[i];
     render(childVdom, parentDOM)
   }
 }
@@ -157,12 +155,59 @@ export function compareTwoVdom(parentDOM, oldVdom, newVdom, nextDOM) {
  */
 function updateElement(oldVdom, newVdom) {
   // 先更新属性
-  if (typeof oldVdom.type === 'string') {
+  /* 文本节点 */
+  if (oldVdom.type === REACT_TEXT) {
+    const currentDOM = newVdom.dom = oldVdom.dom;
+    currentDOM.textContent = newVdom.props.content;
+    /* 原生节点 */
+  } else if (typeof oldVdom.type === 'string') {
     let currentDOM = newVdom.dom = oldVdom.dom;//复用老的div的真实DOM
     /* 先更新自己的属性 */
     updateProps(currentDOM, oldVdom.props, newVdom.props);
-    /* 然后更新儿子们 */
-    // updateChildren(currentDOM, oldVdom.props.children, newVdom.props.children);
+    /* 然后更新儿子们： 也就是只有原生组件我们才会进行深度对比 */
+    updateChildren(currentDOM, oldVdom.props.children, newVdom.props.children);
+  } else if (typeof oldVdom.type === 'function') {
+    /* 老的是组件，新的也是组件 */
+    if (oldVdom.type.isReactComponent) {
+      updateClassComponent(oldVdom, newVdom);
+    } else {
+      // updateFunctionComponent(oldVdom, newVdom);
+    }
+  }
+}
+
+/**
+ * @description: 
+ * @param {*} oldVdom
+ * @param {*} newVdom
+ * @return {*}
+ */
+function updateClassComponent(oldVdom, newVdom) {
+  /* 类的实例需要复用，类的实例不管更新多少只有一个 */
+  let classInstance = newVdom.classInstance = oldVdom.classInstance;
+  /* 上一次的这个类组件渲染出来的虚拟DOM */
+  newVdom.oldRenderVdom = oldVdom.oldRenderVdom;
+  if (classInstance.componentWillReceiveProps) {
+    classInstance.componentWillReceiveProps();
+  }
+  /* 触发组件的更新，要把新的属性传过来 */
+  classInstance.updater.emitUpdate(newVdom.props)
+}
+
+/**
+ * @description: 深度比较两个虚拟DOM的children
+ * @param {*} parentDOM 复用的老的父节点的真实DOM
+ * @param {*} oldVChildren  老儿子们
+ * @param {*} newVChildren  新儿子们
+ * @return {*}
+ */
+function updateChildren(parentDOM, oldVChildren, newVChildren) {
+  /* 因为children可能是对象，也可能是数组，为了方便我们都采用索引比较，全部格式化为数组 */
+  oldVChildren = Array.isArray(oldVChildren) ? oldVChildren : [oldVChildren];
+  newVChildren = Array.isArray(newVChildren) ? newVChildren : [oldVChildren];
+  const maxLength = Math.max(oldVChildren.length, newVChildren.length);
+  for (let i = 0; i < maxLength; i++) {
+    compareTwoVdom(parentDOM, oldVChildren[i], newVChildren[i])
   }
 }
 
