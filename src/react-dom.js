@@ -20,7 +20,7 @@ export function createDOM(vdom) {
   let { type, props } = vdom;
   let dom;
   if (type === REACT_TEXT) {
-    dom = document.createTextNode(props.context)
+    dom = document.createTextNode(props.content);
   } else if (typeof type === 'function') {
     if (type.isReactComponent) {
       return mountClassComponent(vdom);
@@ -132,6 +132,7 @@ export function compareTwoVdom(parentDOM, oldVdom, newVdom, nextDOM) {
     }
   } else if (oldVdom && newVdom && (oldVdom.type !== newVdom.type)) {
     /* 老的有，新的也有，但是类型不同 */
+    debugger;
     const oldDOM = findDOM(oldVdom); //老的真实DOM
     const newDOM = createDOM(newVdom);//新的真实DOM
     parentDOM.replaceChild(newDOM, oldDOM);

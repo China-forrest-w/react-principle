@@ -9,7 +9,8 @@
 import Component from './Component';
 import { wrapToVdom } from './utils';
 function createElement(type, config, children) {
-    console.log("createElement")
+    console.log("createElement11111111111111")
+    debugger;
     if (config) {
         delete config._source;
         delete config._self;
