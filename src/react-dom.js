@@ -12,7 +12,6 @@ function render(vdom, container) {
   const dom = createDOM(vdom);
   container.appendChild(dom);
   dom.componentDidMount && dom.componentDidMount();
-  console.log("render")
 }
 
 /* 把虚拟DOM变成真实DOM */
@@ -30,7 +29,6 @@ export function createDOM(vdom) {
   } else { //原生组件
     dom = document.createElement(type);
   }
-  console.log('createDOM');
   // 使用虚拟DOM的属性更新刚创建出来的真实DOM的属性
   updateProps(dom, {}, props);
 
@@ -114,7 +112,6 @@ function updateProps(dom, oldProps, newProps) {
  */
 export function compareTwoVdom(parentDOM, oldVdom, newVdom, nextDOM) {
   /* 老的虚拟DOM和新的虚拟DOM都是null */
-  console.log('compareTwoVdom')
   if (!oldVdom && !newVdom) {
   } else if (oldVdom && !newVdom) {
     const currentDOM = findDOM(oldVdom);
@@ -141,9 +138,7 @@ export function compareTwoVdom(parentDOM, oldVdom, newVdom, nextDOM) {
     /* 新的有老的也有并且类型相同：就可以复用老的dom节点，然后进行深度的dom-diff */
     /* 既要更新自己的属性，又要比较儿子们 */
   } else {
-    console.log('相同的结构updateElement');
     updateElement(oldVdom, newVdom);
-    return newVdom;
   }
 }
 
