@@ -132,7 +132,6 @@ export function compareTwoVdom(parentDOM, oldVdom, newVdom, nextDOM) {
     }
   } else if (oldVdom && newVdom && (oldVdom.type !== newVdom.type)) {
     /* 老的有，新的也有，但是类型不同 */
-    debugger;
     const oldDOM = findDOM(oldVdom); //老的真实DOM
     const newDOM = createDOM(newVdom);//新的真实DOM
     parentDOM.replaceChild(newDOM, oldDOM);
@@ -205,7 +204,7 @@ function updateClassComponent(oldVdom, newVdom) {
 function updateChildren(parentDOM, oldVChildren, newVChildren) {
   /* 因为children可能是对象，也可能是数组，为了方便我们都采用索引比较，全部格式化为数组 */
   oldVChildren = Array.isArray(oldVChildren) ? oldVChildren : [oldVChildren];
-  newVChildren = Array.isArray(newVChildren) ? newVChildren : [oldVChildren];
+  newVChildren = Array.isArray(newVChildren) ? newVChildren : [newVChildren];
   const maxLength = Math.max(oldVChildren.length, newVChildren.length);
   for (let i = 0; i < maxLength; i++) {
     compareTwoVdom(parentDOM, oldVChildren[i], newVChildren[i])
