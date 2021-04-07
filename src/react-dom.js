@@ -8,9 +8,16 @@
 import { addEvent } from './event';
 import { REACT_TEXT } from './constants';
 
-function render(vdom, container) {
+function render(vdom, parentDOM, nextDOM) {
   const dom = createDOM(vdom);
-  container.appendChild(dom);
+  if (vdom) {
+    const newDOM = createDOM(vdom);
+    if (nextDOM) {
+      parentDOM.insertBefore(newDOM, nextDOM);
+    } else {
+      parentDOM.appendChild(newDOM);
+    }
+  }
   dom.componentDidMount && dom.componentDidMount();
 }
 
@@ -121,12 +128,7 @@ export function compareTwoVdom(parentDOM, oldVdom, newVdom, nextDOM) {
     }
     /* 老的虚拟dom为null,新的虚拟dom有值：新建dom节点然后插入 */
   } else if (!oldVdom && newVdom) {
-    const newDOM = createDOM(newVdom);
-    if (nextDOM) {
-      parentDOM.insertBefore(newDOM, nextDOM);
-    } else {
-      parentDOM.appendChild(newDOM);
-    }
+    render(newVdom, parentDOM, nextDOM);
   } else if (oldVdom && newVdom && (oldVdom.type !== newVdom.type)) {
     /* 老的有，新的也有，但是类型不同 */
     const oldDOM = findDOM(oldVdom); //老的真实DOM
@@ -166,9 +168,18 @@ function updateElement(oldVdom, newVdom) {
     if (oldVdom.type.isReactComponent) {
       updateClassComponent(oldVdom, newVdom);
     } else {
-      // updateFunctionComponent(oldVdom, newVdom);
+      updateFunctionComponent(oldVdom, newVdom);
     }
   }
+}
+
+function updateFunctionComponent(oldVdom, newVdom) {
+  let parentDOM = findDOM(oldVdom).parentNode;
+  let { type, props } = newVdom;
+  let oldRenderVdom = oldVdom.oldRenderVdom;
+  let newRenderVdom = type(props);
+  compareTwoVdom(parentDOM, oldRenderVdom, newRenderVdom);
+  newVdom.oldRenderVdom = newRenderVdom;
 }
 
 /**
@@ -202,7 +213,8 @@ function updateChildren(parentDOM, oldVChildren, newVChildren) {
   newVChildren = Array.isArray(newVChildren) ? newVChildren : [newVChildren];
   const maxLength = Math.max(oldVChildren.length, newVChildren.length);
   for (let i = 0; i < maxLength; i++) {
-    compareTwoVdom(parentDOM, oldVChildren[i], newVChildren[i])
+    let nextDOM = oldVChildren.find((item, index) => index > i && item && item.dom);
+    compareTwoVdom(parentDOM, oldVChildren[i], newVChildren[i], nextDOM && nextDOM.dom);
   }
 }
 
