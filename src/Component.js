@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2021-03-16 15:13:37
- * @LastEditTime: 2021-03-27 15:44:39
+ * @LastEditTime: 2021-04-08 20:38:24
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /react-principle/src/Component.js
@@ -16,6 +16,7 @@ export let updateQueue = {
     for (let updater of this.updaters) {
       updater.updateComponent();
     }
+    this.updaters.clear();
     this.isBatchingUpdate = false;
   }
 }
@@ -74,16 +75,18 @@ class Updater {
  * @return {*}
  */
 function shouldUpdate(classInstance, nextProps, nextState) {
-  /* 不管组件是否更新， 组件的props已经改变了 */
-  if(nextProps) {
-    classInstance.props = nextProps;
+  let willUpdate = true;//是否要更新
+  /* 如果有shouldComponentUpdate方法，并且返回值是false则不更新 */
+  if (classInstance.shouldComponentUpdate && !classInstance.shouldComponentUpdate(nextProps, nextState)) {
+    willUpdate = false;
   }
-  /* 不管组件的属性是否要更新，其实组件的state已经改变了 */
+  if (willUpdate && classInstance.componentWillUpdate) {
+    classInstance.componentWillUpdate();
+  }
+  /* 不管组件是否更新， 组件新的props，和state已经改变了 */
+  if (nextProps) classInstance.props = nextProps;
   classInstance.state = nextState;
-  if (classInstance.shouldComponentUpdate && !classInstance.shouldComponentUpdate(classInstance.props, classInstance.state)) {
-    return;
-  }
-  classInstance.forceUpdate();
+  if (willUpdate) classInstance.forceUpdate();
 }
 
 class Component {
@@ -97,13 +100,7 @@ class Component {
     this.updater.addState(partialState, callback);
   }
   forceUpdate() {
-    if (this.componentWillUpdate) {
-      this.componentWillUpdate();
-    }
     const newVdom = this.render();
-    console.log('this', this);
-    console.log('newVdom', newVdom);
-    // updateClassComponent(this, newVdom);
     compareTwoVdom(this.oldRenderVdom.dom.parentNode, this.oldRenderVdom, newVdom);
     if (this.componentDidUpdate) {
       this.componentDidUpdate();
