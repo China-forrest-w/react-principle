@@ -48,9 +48,6 @@ export function createDOM(vdom) {
   } else if (Array.isArray(props?.children)) {
     reconcileChildren(props.children, dom);
   }
-  //  else {
-  //   document.textContent = props?.children ? props?.children.toString() : '';
-  // }
   // 把真实DOM作为一个dom属性放到虚拟DOM，为以后的更新做准备
   vdom.dom = dom;
   if (ref) ref.current = dom;

@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2021-03-16 15:13:37
- * @LastEditTime: 2021-04-09 12:28:55
+ * @LastEditTime: 2021-04-09 14:34:07
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /react-principle/src/Component.js
@@ -115,9 +115,10 @@ class Component {
   }
   updateComponent() {
     const newVdom = this.render();
+    const extraArgs = this.getSnapshotBeforeUpdate && this.getSnapshotBeforeUpdate();
     compareTwoVdom(this.oldRenderVdom.dom.parentNode, this.oldRenderVdom, newVdom);
     if (this.componentDidUpdate) {
-      this.componentDidUpdate();
+      this.componentDidUpdate(this.props, this.state, extraArgs);
     }
   }
 }
