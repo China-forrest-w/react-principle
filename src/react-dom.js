@@ -23,7 +23,7 @@ function render(vdom, parentDOM, nextDOM) {
 
 /* 把虚拟DOM变成真实DOM */
 export function createDOM(vdom) {
-  let { type, props } = vdom;
+  let { type, props, key, ref } = vdom;
   let dom;
   if (type === REACT_TEXT) {
     dom = document.createTextNode(props.content);
@@ -53,6 +53,7 @@ export function createDOM(vdom) {
   // }
   // 把真实DOM作为一个dom属性放到虚拟DOM，为以后的更新做准备
   vdom.dom = dom;
+  if (ref) ref.current = dom;
   return dom;
 }
 
