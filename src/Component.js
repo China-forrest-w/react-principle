@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2021-03-16 15:13:37
- * @LastEditTime: 2021-04-09 12:21:11
+ * @LastEditTime: 2021-04-09 12:28:55
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /react-principle/src/Component.js
@@ -107,7 +107,7 @@ class Component {
     let nextState = this.state;
     let nextProps = this.props;
     if (this.constructor.getDerivedStateFromProps) {
-      let partialState = this.constructor.getDerivedStateFromProps(nextState, nextState);
+      let partialState = this.constructor.getDerivedStateFromProps(nextProps, nextState);
       if (partialState) nextState = { ...nextState, ...partialState }
     }
     this.state = nextState;
@@ -121,15 +121,4 @@ class Component {
     }
   }
 }
-
-// 更新类组件实例上挂载的dom
-// function updateClassComponent(classInstance, newVdom) {
-//   /* 取出这个类组件中上次渲染出来的真实DOM */
-//   let oldDOM = classInstance.dom;
-//   /* 把一个新的虚拟DOM变成真实DOM */
-//   let newDOM = createDOM(newVdom);
-//   oldDOM.parentNode.replaceChild(newDOM, oldDOM)
-//   classInstance.dom = newDOM;
-// }
-
 export default Component;
