@@ -1,12 +1,12 @@
 /*
  * @Author: your name
  * @Date: 2021-03-16 15:13:37
- * @LastEditTime: 2021-04-08 20:38:24
+ * @LastEditTime: 2021-04-09 12:21:11
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /react-principle/src/Component.js
  */
-import { createDOM, compareTwoVdom } from './react-dom';
+import { compareTwoVdom } from './react-dom';
 
 // 更新队列
 export let updateQueue = {
@@ -51,11 +51,11 @@ class Updater {
     if (nextProps || pendingState.length) {
       callbacks.forEach(callback => callback());
       callbacks.length = 0;
-      shouldUpdate(classInstance, nextProps, this.getState());
+      shouldUpdate(classInstance, nextProps, this.getState(nextProps));
     }
   }
   /* 计算最新的状态 */
-  getState() {
+  getState(nextProps) {
     let { classInstance, pendingState } = this;
     let { state } = classInstance;
     pendingState.forEach((nextState) => {
@@ -65,6 +65,10 @@ class Updater {
       state = { ...state, ...nextState };
     });
     pendingState.length = 0;
+    if (classInstance.getDerivedStateFromProps) {
+      let partialState = classInstance.getDerivedStateFromProps(nextProps, classInstance.state);
+      if (partialState) state = { ...state, ...partialState }
+    }
     return state;
   }
 }
@@ -86,7 +90,7 @@ function shouldUpdate(classInstance, nextProps, nextState) {
   /* 不管组件是否更新， 组件新的props，和state已经改变了 */
   if (nextProps) classInstance.props = nextProps;
   classInstance.state = nextState;
-  if (willUpdate) classInstance.forceUpdate();
+  if (willUpdate) classInstance.updateComponent();
 }
 
 class Component {
@@ -100,6 +104,16 @@ class Component {
     this.updater.addState(partialState, callback);
   }
   forceUpdate() {
+    let nextState = this.state;
+    let nextProps = this.props;
+    if (this.constructor.getDerivedStateFromProps) {
+      let partialState = this.constructor.getDerivedStateFromProps(nextState, nextState);
+      if (partialState) nextState = { ...nextState, ...partialState }
+    }
+    this.state = nextState;
+    this.updateComponnet();
+  }
+  updateComponent() {
     const newVdom = this.render();
     compareTwoVdom(this.oldRenderVdom.dom.parentNode, this.oldRenderVdom, newVdom);
     if (this.componentDidUpdate) {

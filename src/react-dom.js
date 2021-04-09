@@ -61,9 +61,16 @@ function mountClassComponent(vdom) {
   let { type, props } = vdom;
   // 创建类的实例
   let classInstance = new type(props);
+  classInstance.ownVdom = vdom;
   vdom.classInstance = classInstance;
   if (classInstance.componentWillMount) {
     classInstance.componentWillMount();
+  }
+  if (type.getDerivedStateFromProps) {
+    let partialState = type.getDerivedStateFromProps(classInstance.props, classInstance.state);
+    if (partialState) {
+      classInstance.state = { ...classInstance.state, ...partialState }
+    }
   }
   /* 调用实例的render方法返回要渲染的虚拟DOM对象 */
   let oldRenderVdom = classInstance.render();
