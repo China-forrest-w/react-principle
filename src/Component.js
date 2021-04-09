@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2021-03-16 15:13:37
- * @LastEditTime: 2021-04-09 14:34:07
+ * @LastEditTime: 2021-04-09 16:40:41
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /react-principle/src/Component.js
@@ -90,6 +90,9 @@ function shouldUpdate(classInstance, nextProps, nextState) {
   /* 不管组件是否更新， 组件新的props，和state已经改变了 */
   if (nextProps) classInstance.props = nextProps;
   classInstance.state = nextState;
+  // if(classInstance.constructor.contextType) {
+  //   classInstance.context = classInstance.constructor.contextType.Provider._value;
+  // }
   if (willUpdate) classInstance.updateComponent();
 }
 
@@ -111,7 +114,10 @@ class Component {
       if (partialState) nextState = { ...nextState, ...partialState }
     }
     this.state = nextState;
-    this.updateComponnet();
+    // if(this.constructor.contextType) {
+    //   this.context = this.constructor.contextType.Provider._value;
+    // }
+    this.updateComponent();
   }
   updateComponent() {
     const newVdom = this.render();

@@ -59,7 +59,9 @@ function mountClassComponent(vdom) {
   let { type, props } = vdom;
   // 创建类的实例
   let classInstance = new type(props);
-  classInstance.ownVdom = vdom;
+  if(type.contextType) {
+    classInstance.context = type.contextType.Provider._value;
+  }
   vdom.classInstance = classInstance;
   if (classInstance.componentWillMount) {
     classInstance.componentWillMount();

@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2021-03-16 11:24:19
- * @LastEditTime: 2021-04-09 14:25:46
+ * @LastEditTime: 2021-04-09 17:01:58
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /react-principle/src/react.js
@@ -36,5 +36,22 @@ function createRef() {
   return { current: null };
 }
 
-const React = { createElement, Component, createRef };
+function createContext(initialValue) {
+  Provider._value = initialValue;
+
+  function Provider(props) {
+    if (Provider._value) {
+      Object.assign(Provider._value, props.value);
+    } else {
+      Provider._value = props.value || {};
+    }
+    return props.children;
+  }
+
+  function Consumer(props) {
+    return props.children(Provider._value);
+  }
+  return { Provider, Consumer }
+}
+const React = { createElement, Component, createRef, createContext };
 export default React;
