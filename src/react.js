@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2021-03-16 11:24:19
- * @LastEditTime: 2021-04-09 17:01:58
+ * @LastEditTime: 2021-04-09 19:48:48
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /react-principle/src/react.js
@@ -32,6 +32,27 @@ function createElement(type, config, children) {
   }
 }
 
+function cloneElement(oldElement, newProps, ...newChildren) {
+  let children = oldElement.props.children;
+  if (children) {
+    if (!Array.isArray(children)) {
+      children = [children];
+    }
+  } else {
+    children = [];
+  }
+  children.push(...newChildren);
+  children = children.map(wrapToVdom);
+  if (children.length === 0) {
+    children = undefined;
+  } else if (children.length === 1) {
+    children = children[0];
+  }
+  newProps.children = children;
+  let props = { ...oldElement.props, ...newProps };
+  return { ...oldElement, props }
+}
+
 function createRef() {
   return { current: null };
 }
@@ -53,5 +74,5 @@ function createContext(initialValue) {
   }
   return { Provider, Consumer }
 }
-const React = { createElement, Component, createRef, createContext };
+const React = { createElement, Component, createRef, createContext, cloneElement };
 export default React;
