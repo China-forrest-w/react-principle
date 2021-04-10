@@ -12,10 +12,10 @@ import ReactDOM from 'react-dom';
 let withLoading = loadingMessage = OldComponent => {
   return class NewComponent extends React.Component {
     show = () => {
-      console.log('show');
+      // console.log('show');
     }
     hide = () => {
-      console.log('hide');
+      // console.log('hide');
     }
     render() {
       let extraProps = { show: this.show, hide: this.hide };
@@ -33,4 +33,4 @@ class Hello extends React.Component {
   }
 }
 
-ReactDOM.render(<Hello/>, document.getElementById('root'))
+ReactDOM.render(<Hello />, document.getElementById('root'))
