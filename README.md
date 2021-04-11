@@ -1,3 +1,6 @@
+# 前言
+因为是自己的玩具框架，所以和react官方源码的差距还是很大的。如果想学习react官方源码的同学，可以先从这个玩具框架入手，然后再去分析官方源码，这样循序渐进理解react的真理会事半功倍。
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

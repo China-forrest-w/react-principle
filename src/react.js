@@ -6,7 +6,7 @@
  * @Description: In User Settings Edit
  * @FilePath: /react-principle/src/react.js
  */
-import Component from './Component';
+import { Component, PureComponent } from './Component';
 import { wrapToVdom } from './utils';
 function createElement(type, config, children) {
   let key, ref;
@@ -74,5 +74,5 @@ function createContext(initialValue) {
   }
   return { Provider, Consumer }
 }
-const React = { createElement, Component, createRef, createContext, cloneElement };
+const React = { createElement, Component, PureComponent, createRef, createContext, cloneElement };
 export default React;
