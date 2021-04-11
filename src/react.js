@@ -8,6 +8,7 @@
  */
 import { Component, PureComponent } from './Component';
 import { wrapToVdom } from './utils';
+import { useState } from './react-dom';
 function createElement(type, config, children) {
   let key, ref;
   if (config) {
@@ -74,5 +75,13 @@ function createContext(initialValue) {
   }
   return { Provider, Consumer }
 }
-const React = { createElement, Component, PureComponent, createRef, createContext, cloneElement };
+const React = {
+  createElement,
+  Component,
+  PureComponent,
+  createRef,
+  createContext,
+  cloneElement,
+  useState,
+};
 export default React;

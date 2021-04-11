@@ -8,7 +8,20 @@
 import { addEvent } from './event';
 import { REACT_TEXT } from './constants';
 
+
+/* 存放所有状态的数组 */
+let hooksStates = [];
+let hooksIndex = 0;
+
 function render(vdom, parentDOM, nextDOM) {
+  mount(vdom, parentDOM, nextDOM);
+  scheduleUpdate = () => {
+    hooksIndex = 0;
+    compareTwoVdom(parentDOM, vdom, vdom)
+  }
+}
+
+function mount(vdom, parentDOM, nextDOM) {
   const dom = createDOM(vdom);
   if (vdom) {
     const newDOM = createDOM(vdom);
@@ -19,6 +32,23 @@ function render(vdom, parentDOM, nextDOM) {
     }
   }
   dom.componentDidMount && dom.componentDidMount();
+}
+
+export function useState(initialState) {
+  /* 取出之前的值，如果没有则使用默认值 */
+  hooksStates[hooksIndex] = hooksStates[hooksIndex] || typeof initialState === 'function' ? initialState() : initialState;
+  /* 新定义一个变量currentIndex */
+  let currentIndex = hooksIndex;
+
+  function setState(newState) {
+    if (typeof newState === 'function') {
+      newState = newState(hooksStates[currentIndex]);
+    }
+    hooksStates[currentIndex] = newState;
+    /* 当状态改变后更新应用 */
+    scheduleUpdate();
+  }
+  return [hooksStates[hooksIndex++], setState]
 }
 
 /* 把虚拟DOM变成真实DOM */
@@ -44,7 +74,7 @@ export function createDOM(vdom) {
 
   if (typeof props?.children === 'object' && props?.children?.type) {
     // 把儿子变成真实DOM插到自己身上
-    render(props.children, dom);
+    mount(props.children, dom);
   } else if (Array.isArray(props?.children)) {
     reconcileChildren(props.children, dom);
   }
@@ -59,7 +89,7 @@ function mountClassComponent(vdom) {
   let { type, props } = vdom;
   // 创建类的实例
   let classInstance = new type(props);
-  if(type.contextType) {
+  if (type.contextType) {
     classInstance.context = type.contextType.Provider._value;
   }
   vdom.classInstance = classInstance;
@@ -95,7 +125,7 @@ function mountFunctionComponent(vdom) {//类型为自定义函数组件的虚拟
 function reconcileChildren(childrenVdom, parentDOM) {
   for (let i = 0; i < childrenVdom.length; i++) {
     const childVdom = childrenVdom[i];
-    render(childVdom, parentDOM)
+    mount(childVdom, parentDOM)
   }
 }
 
@@ -135,7 +165,7 @@ export function compareTwoVdom(parentDOM, oldVdom, newVdom, nextDOM) {
     }
     /* 老的虚拟dom为null,新的虚拟dom有值：新建dom节点然后插入 */
   } else if (!oldVdom && newVdom) {
-    render(newVdom, parentDOM, nextDOM);
+    mount(newVdom, parentDOM, nextDOM);
   } else if (oldVdom && newVdom && (oldVdom.type !== newVdom.type)) {
     /* 老的有，新的也有，但是类型不同 */
     const oldDOM = findDOM(oldVdom); //老的真实DOM
@@ -244,5 +274,6 @@ function findDOM(vdom) {
   }
   return dom;
 }
+
 const ReactDOM = { render };
 export default ReactDOM;
