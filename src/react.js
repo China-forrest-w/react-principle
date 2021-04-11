@@ -75,6 +75,14 @@ function createContext(initialValue) {
   }
   return { Provider, Consumer }
 }
+
+function memo(FunctionComponent) {
+  return class extends PureComponent {
+    render() {
+      return FunctionComponent(this.props)
+    }
+  }
+}
 const React = {
   createElement,
   Component,
@@ -83,5 +91,6 @@ const React = {
   createContext,
   cloneElement,
   useState,
+  memo
 };
 export default React;
