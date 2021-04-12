@@ -8,7 +8,7 @@
  */
 import { Component, PureComponent } from './Component';
 import { wrapToVdom } from './utils';
-import { useState, useCallback, useMemo } from './react-dom';
+import { useState, useCallback, useMemo, useReducer } from './react-dom';
 function createElement(type, config, children) {
   let key, ref;
   if (config) {
@@ -93,6 +93,7 @@ const React = {
   useState,
   memo,
   useCallback,
-  useMemo
+  useMemo,
+  useReducer
 };
 export default React;
