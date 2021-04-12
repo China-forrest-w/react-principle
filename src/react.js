@@ -59,21 +59,22 @@ function createRef() {
 }
 
 function createContext(initialValue) {
-  Provider._value = initialValue;
-
+  let context = { Provider, Consumer };
   function Provider(props) {
-    if (Provider._value) {
-      Object.assign(Provider._value, props.value);
-    } else {
-      Provider._value = props.value || {};
-    }
+    context._currentValue = context._currentValue || initialValue;
+    Object.assign(context._currentValue, props.value);
     return props.children;
   }
 
   function Consumer(props) {
-    return props.children(Provider._value);
+    return props.children(context._currentValue);
   }
-  return { Provider, Consumer }
+
+  return context;
+}
+
+function useContext(context) {
+  return context._currentValue;
 }
 
 function memo(FunctionComponent) {
@@ -94,6 +95,7 @@ const React = {
   memo,
   useCallback,
   useMemo,
-  useReducer
+  useReducer,
+  useContext
 };
 export default React;
