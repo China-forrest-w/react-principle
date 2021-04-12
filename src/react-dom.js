@@ -88,6 +88,20 @@ export function useState(initialState) {
   }
   return [hooksStates[hooksIndex++], setState]
 }
+// export function useState(initialState) {
+//   return useReducer(null, initialState);
+// }
+
+export function useReducer(reducer, initialState) {
+  hooksStates[hooksIndex] = hooksStates[hooksIndex] || typeof initialState === 'function' ? initialState() : initialState;
+  let currentIndex = hooksIndex;
+
+  function dispatch(action) {
+    hooksStates[currentIndex] = reducer ? reducer(hooksStates[currentIndex], action) : action;
+    scheduleUpdate();
+  }
+  return [hooksStates[hooksIndex++], dispatch]
+}
 
 /* 把虚拟DOM变成真实DOM */
 export function createDOM(vdom) {
