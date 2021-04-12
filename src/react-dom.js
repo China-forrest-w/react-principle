@@ -10,8 +10,9 @@ import { REACT_TEXT } from './constants';
 
 
 /* 存放所有状态的数组 */
-let hooksStates = [];
+const hooksStates = [];
 let hooksIndex = 0;
+let scheduleUpdate;
 
 function render(vdom, parentDOM, nextDOM) {
   mount(vdom, parentDOM, nextDOM);
@@ -32,6 +33,43 @@ function mount(vdom, parentDOM, nextDOM) {
     }
   }
   dom.componentDidMount && dom.componentDidMount();
+}
+
+export function useMemo(factory, deps) {
+  if (hooksStates[hooksIndex]) {
+    /* 拿到上一次的依赖值和依赖项 */
+    const [lastMemo, lastDeps] = hooksStates[hooksIndex];
+    const same = deps.every((item, index) => item === lastDeps[index])
+    if (same) {
+      hooksIndex++;
+      return lastMemo;
+    } else {
+      const newMemo = factory();
+      hooksStates[hooksIndex++] = [newMemo, deps];
+      return newMemo;
+    }
+  } else {
+    const newMemo = factory();
+    hooksStates[hooksIndex++] = [newMemo, deps];
+    return newMemo;
+  }
+}
+
+export function useCallback(callback, deps) {
+  if (hooksStates[hooksIndex]) {
+    const [lastCallback, lastDeps] = hooksStates[hooksIndex];
+    const same = deps.every((item, index) => item === lastDeps[index]);
+    if (same) {
+      hooksIndex++;
+      return lastCallback;
+    } else {
+      hooksStates[hooksIndex++] = [callback, deps];
+      return callback;
+    }
+  } else {
+    hooksStates[hooksIndex++] = [callback, deps];
+    return callback;
+  }
 }
 
 export function useState(initialState) {
