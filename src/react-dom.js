@@ -97,7 +97,15 @@ export function useReducer(reducer, initialState) {
   let currentIndex = hooksIndex;
 
   function dispatch(action) {
-    hooksStates[currentIndex] = reducer ? reducer(hooksStates[currentIndex], action) : action;
+    let lastState = hooksStates[currentIndex];
+    let nextState;
+    if (reducer) {
+      nextState = reducer(lastState, action);
+    } else {
+      nextState = action
+    }
+    hooksStates[currentIndex] = nextState;
+    // hooksStates[currentIndex] = reducer ? reducer(hooksStates[currentIndex], action) : action;
     scheduleUpdate();
   }
   return [hooksStates[hooksIndex++], dispatch]
