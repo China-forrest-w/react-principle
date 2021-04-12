@@ -229,6 +229,9 @@ function mountClassComponent(vdom) {
 function mountFunctionComponent(vdom) {//类型为自定义函数组件的虚拟DOM
   let { type: FunctionComponent, props } = vdom;
   let renderVdom = FunctionComponent(props);
+  if (typeof renderVdom === 'string' || typeof renderVdom === 'number') {
+    renderVdom = { type: REACT_TEXT, props: { content: renderVdom } }
+  }
   vdom.oldRenderVdom = renderVdom;
   return createDOM(renderVdom);
 }
