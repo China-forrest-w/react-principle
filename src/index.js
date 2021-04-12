@@ -97,13 +97,20 @@ class ChildCounter extends React.Component {
 }
 
 function App() {
+  const [count, setCount] = React.useState(0)
+  // React.useEffect(() => {
+  //   console.log('useEffect')
+  // }, [count])
   return (
     // <div>1
     //   <span>2</span>
     // </div>
     // <div>1</div>
     // "你好"
-    1
+    <div>
+      <p>{count}</p>
+      <button onClick={() => setCount(count + 1)}>+</button>
+    </div>
   )
 }
 

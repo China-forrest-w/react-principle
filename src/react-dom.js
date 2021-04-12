@@ -75,6 +75,7 @@ export function useCallback(callback, deps) {
 
 export function useState(initialState) {
   /* 取出之前的值，如果没有则使用默认值 */
+  // debugger;
   hooksStates[hooksIndex] = hooksStates[hooksIndex] || typeof initialState === 'function' ? initialState() : initialState;
   /* 新定义一个变量currentIndex */
   let currentIndex = hooksIndex;
