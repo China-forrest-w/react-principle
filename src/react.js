@@ -8,8 +8,9 @@
  */
 import { Component, PureComponent } from './Component';
 import { wrapToVdom } from './utils';
-import { useState, useCallback, useMemo, useReducer } from './react-dom';
+import { useState, useCallback, useMemo, useReducer, useEffect, useLayoutEffect, useRef } from './react-dom';
 function createElement(type, config, children) {
+  console.log('createElement')
   let key, ref;
   if (config) {
     delete config._source;
@@ -96,6 +97,9 @@ const React = {
   useCallback,
   useMemo,
   useReducer,
-  useContext
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef
 };
 export default React;

@@ -7,6 +7,7 @@
 
 import { addEvent } from './event';
 import { REACT_TEXT } from './constants';
+// import { useRef } from 'react';
 
 
 /* 存放所有状态的数组 */
@@ -99,16 +100,64 @@ export function useReducer(reducer, initialState) {
   function dispatch(action) {
     let lastState = hooksStates[currentIndex];
     let nextState;
+    if (typeof action === 'function') {
+      nextState = action(lastState);
+    }
     if (reducer) {
-      nextState = reducer(lastState, action);
-    } else {
-      nextState = action
+      nextState = reducer(nextState, action);
     }
     hooksStates[currentIndex] = nextState;
     // hooksStates[currentIndex] = reducer ? reducer(hooksStates[currentIndex], action) : action;
     scheduleUpdate();
   }
   return [hooksStates[hooksIndex++], dispatch]
+}
+
+export function useEffect(callback, dependencies) {
+  if (hooksStates[hooksIndex]) {
+    let [destroyFunction, lastDependencies] = hooksStates[hooksIndex];
+    let allTheSame = dependencies && dependencies.every((item, index) => item === lastDependencies[index]);
+    if (allTheSame) {
+      hooksIndex++;
+    } else {
+      destroyFunction && destroyFunction();
+      setTimeout(() => {
+        let destroyFunction = callback();
+        hooksStates[hooksIndex++] = [destroyFunction, dependencies];
+      })
+    }
+  } else {
+    setTimeout(() => {
+      let destroyFunction = callback();
+      hooksStates[hooksIndex++] = [destroyFunction, dependencies];
+    })
+  }
+}
+
+export function useRef(initialState) {
+  hooksStates[hooksIndex] = hooksStates[hooksIndex] || { current: initialState };
+  return hooksStates[hooksIndex];
+}
+
+export function useLayoutEffect(callback, dependencies) {
+  if (hooksStates[hooksIndex]) {
+    let [destroyFunction, lastDependencies] = hooksStates[hooksIndex];
+    let allTheSame = dependencies && dependencies.every((item, index) => item === lastDependencies[index]);
+    if (allTheSame) {
+      hooksIndex++;
+    } else {
+      destroyFunction && destroyFunction();
+      queueMicrotask(() => {
+        let destroyFunction = callback();
+        hooksStates[hooksIndex++] = [destroyFunction, dependencies];
+      })
+    }
+  } else {
+    queueMicrotask(() => {
+      let destroyFunction = callback();
+      hooksStates[hooksIndex++] = [destroyFunction, dependencies];
+    })
+  }
 }
 
 /* 把虚拟DOM变成真实DOM */
@@ -126,17 +175,19 @@ export function createDOM(vdom) {
   } else { //原生组件
     dom = document.createElement(type);
   }
-  // 使用虚拟DOM的属性更新刚创建出来的真实DOM的属性
-  updateProps(dom, {}, props);
+  if (props) {
+    // 使用虚拟DOM的属性更新刚创建出来的真实DOM的属性
+    updateProps(dom, {}, props);
 
-  // 单独在这里处理children
-  // 如果只有一个儿子，并且这个儿子是一个虚拟DOM元素
+    // 单独在这里处理children
+    // 如果只有一个儿子，并且这个儿子是一个虚拟DOM元素
 
-  if (typeof props?.children === 'object' && props?.children?.type) {
-    // 把儿子变成真实DOM插到自己身上
-    mount(props.children, dom);
-  } else if (Array.isArray(props?.children)) {
-    reconcileChildren(props.children, dom);
+    if (typeof props?.children === 'object' && props?.children?.type) {
+      // 把儿子变成真实DOM插到自己身上
+      mount(props.children, dom);
+    } else if (Array.isArray(props?.children)) {
+      reconcileChildren(props.children, dom);
+    }
   }
   // 把真实DOM作为一个dom属性放到虚拟DOM，为以后的更新做准备
   vdom.dom = dom;

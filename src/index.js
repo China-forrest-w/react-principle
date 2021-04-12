@@ -96,4 +96,15 @@ class ChildCounter extends React.Component {
   }
 }
 
-ReactDOM.render(<Counter />, document.getElementById('root'))
+function App() {
+  return (
+    // <div>1
+    //   <span>2</span>
+    // </div>
+    // <div>1</div>
+    // "你好"
+    1
+  )
+}
+
+ReactDOM.render(<App />, document.getElementById('root'))
