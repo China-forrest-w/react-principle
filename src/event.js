@@ -9,7 +9,7 @@
 import { updateQueue } from './Component';
 
 /* 
-给真实DOM添加时间处理函数
+给真实DOM添加事件处理函数
 为什么要做合成事件和事件委托呢？
 1.做兼容处理，不同浏览器的事件对象event是不一样的
 2. 可以在我们写事件处理函数之前和之后做一些事情，比如设置是否进行批量更新（updateQueue.isBatchingUpdate = true/false）
